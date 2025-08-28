@@ -4,8 +4,5 @@
     "api/bot.js": {
       "runtime": "nodejs20.x"
     }
-  },
-  "routes": [
-    { "src": "/(.*)", "dest": "/$1" }
-  ]
+  }
 }
