@@ -1,36 +1,34 @@
-// server.js
-require('dotenv').config();
-const path = require('path');
-const express = require('express');
-const { Telegraf, Markup } = require('telegraf');
+// server.js (ESM-версия)
+import 'dotenv/config';
+import path from 'path';
+import express from 'express';
+import { Telegraf, Markup } from 'telegraf';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
+app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
-const BOT_TOKEN = process.env.BOT_TOKEN;
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN;
 if (!BOT_TOKEN) {
-  console.error('BOT_TOKEN не задан в .env');
+  console.error('❌ TELEGRAM_BOT_TOKEN не задан');
   process.exit(1);
 }
-const GAME_URL = (process.env.GAME_URL || `http://localhost:${PORT}/`).replace(/\/?$/, '/');
+const GAME_URL = (process.env.WEB_APP_URL || process.env.GAME_URL || '').replace(/\/?$/, '/');
+const SETUP_SECRET = process.env.SETUP_SECRET || 'my-secret-42';
 
-const bot = new Telegraf(BOT_TOKEN);
+const bot = new Telegraf(BOT_TOKEN, { webhookReply: true });
 
-// Раздача статики
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Простой API для здоровья
-app.get('/health', (_req, res) => res.json({ ok: true }));
-
-// Старт бота — кнопка WebApp
 bot.start(async (ctx) => {
   await ctx.reply(
-    'Привет! 👋 Нажми «Играть», чтобы открыть веб-игру “1000 фактов”.',
+    'Привет 👋 Нажми «Играть», чтобы открыть игру!',
     Markup.inlineKeyboard([Markup.button.webApp('🎮 Играть', GAME_URL)])
   );
 });
 
-// Альтернативная команда
 bot.command('play', async (ctx) => {
   await ctx.reply(
     'Открыть игру:',
@@ -38,22 +36,37 @@ bot.command('play', async (ctx) => {
   );
 });
 
-// Запуск
-(async () => {
-  // Поллинг (без вебхуков, удобно локально)
-  bot.launch().then(() => {
-    console.log('🤖 Bot polling запущен');
-  }).catch((e) => {
-    console.error('Ошибка запуска бота:', e);
-    process.exit(1);
-  });
+// статика
+app.use(express.static(path.join(__dirname, 'public')));
 
-  app.listen(PORT, () => {
-    console.log(`🌐 Web-сервер: http://localhost:${PORT}`);
-    console.log(`🎮 GAME_URL: ${GAME_URL}`);
-  });
+// health
+app.get('/health', (_req, res) => res.json({ ok: true }));
 
-  // Корректная остановка
-  process.once('SIGINT', () => { bot.stop('SIGINT'); process.exit(0); });
-  process.once('SIGTERM', () => { bot.stop('SIGTERM'); process.exit(0); });
-})();
+// webhook
+const WEBHOOK_PATH = '/bot';
+app.post(WEBHOOK_PATH, bot.webhookCallback(WEBHOOK_PATH));
+
+// setup
+app.get('/setup', async (req, res) => {
+  if (req.query.secret !== SETUP_SECRET) {
+    return res.status(403).send('Forbidden');
+  }
+  const proto = req.headers['x-forwarded-proto'] || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  const publicBase = `${proto}://${host}`;
+  const webhookUrl = `${publicBase}${WEBHOOK_PATH}`;
+  try {
+    const api = `https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`;
+    const r = await fetch(api);
+    const j = await r.json();
+    res.json({ ok: true, webhookUrl, result: j });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e) });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`🌐 Server running on :${PORT}`);
+  console.log(`🤖 Webhook endpoint: POST ${WEBHOOK_PATH}`);
+  console.log(`🎮 GAME_URL: ${GAME_URL}`);
+});
