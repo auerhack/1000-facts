@@ -231,7 +231,7 @@ async function copyCurrentFact() {
 /* ---------- Load facts ---------- */
 async function loadFacts() {
   try {
-    const res = await fetch('./facts.txt', { cache: 'no-store' });
+    const res = await fetch('/facts.txt', { cache: 'no-store' });
     const raw = await res.text();
     facts = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
     if (!facts.length) {
@@ -254,5 +254,8 @@ async function loadFacts() {
   canvas.addEventListener('click', handlePointer);
   canvas.addEventListener('touchend', (e) => { e.preventDefault(); handlePointer(e); }, { passive: false });
 
-  if (btnCopy) btnCopy.addEventListener('click', (e) => { e.stopPropagation(); copyCurrentFact(); });
+  if (btnCopy) btnCopy.addEventListener('click', (e) => {
+    e.stopPropagation();
+    copyCurrentFact();
+  });
 })();
