@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>1000 фактов</title>
+  <link rel="stylesheet" href="./style.css" />
+  <!-- Telegram WebApp SDK (не обязательно, но удобно для UX в Telegram) -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- Мини-HUD поверх Canvas -->
+  <div class="hud">
+    <div class="counter"><span id="idx">0</span>/<span id="total">0</span></div>
+    <button id="btnCopy" class="btn">📋 копировать</button>
+  </div>
+
+  <script src="./game.js"></script>
+</body>
+</html>

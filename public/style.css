@@ -1,0 +1,52 @@
+/* Сбросы и full-bleed канвас */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #0b0f15;
+  color: #eaf0f6;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+#game {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  touch-action: none; /* отключаем жесты */
+  cursor: pointer;
+}
+
+/* Небольшой HUD для счётчика и кнопок */
+.hud {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none; /* клики пробрасываются на канвас */
+}
+
+.counter {
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  pointer-events: auto;
+}
+
+.btn {
+  pointer-events: auto;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  color: #eaf0f6;
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
